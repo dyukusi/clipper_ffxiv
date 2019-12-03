@@ -24,6 +24,12 @@ function initIpcEvent() {
   ipcRenderer.on('logNewLine', (event, line) => {
     $('#latest-log-line').text(line);
   });
+
+  ipcRenderer.on('updateIsCreateClipReady', (event, args) => {
+    var isReady = args.isReady;
+    var coolTime = args.coolTime;
+    $('#is-create-clip-ready-text').text(isReady ? 'ready!' : 'in cool time... ' + coolTime + ' msec. please wait.');
+  });
 };
 
 function initUpdateSettingPoll() {

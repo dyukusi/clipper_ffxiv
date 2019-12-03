@@ -6,18 +6,58 @@ const BrowserWindow = electron.BrowserWindow;
 const dialog = require('electron').dialog;
 const ipcMain = require('electron').ipcMain;
 const Tail = require('tail').Tail;
+const Moment = require('moment');
+const Config = require('config');
 let tail;
 
 let triggerRegexp = new RegExp('$^');
-let clipCoolTime = 30000;
+class CreateClipStatus {
+  constructor() {
+    this.ready = true;
+    this.updateIsCreateClipReady(true);
+  }
+
+  isReady() {
+    return this.ready;
+  }
+
+  updateIsCreateClipReady(isReady) {
+    this.ready = isReady;
+    window.webContents.send('updateIsCreateClipReady', {
+      isReady: this.ready,
+      coolTime: clipCoolTime,
+    });
+  }
+}
+let createClipStatus = null;
+let clipCoolTime = Number(Config.get('clipCoolTime'));
 let window = null;
 
 // discord bot
 let discordChannelId = null; // my private channel
 let Discord = require('discord.js');
 let discord = new Discord.Client();
-let TOKEN = "NTA5NjkyMDA5ODgwMjIzNzQ1.DsRh8w.5-3Ooxw93K95p8UcYv-nJvCor2k";
+let DISCORD_BOT_TOKEN = Config.get('discordBotToken');
 let targetChannel = null;
+
+// twitch api
+const Twitch = require('twitch').default;
+const TWITCH_CLIENT_ID = Config.get('twitchAPI.clientId');
+const TWITCH_ACCESS_TOKEN = Config.get('twitchAPI.accessToken');
+const TWITCH_DYUKUSI_CHANNEL_ID = Number(Config.get('twitchAPI.channelId'));
+let twitchClient = null;
+
+// =========================== MAIN FUNCTION ================================
+app.on('ready', async function () {
+  await initMainWindow();
+  initIpcEvents();
+  await initTwitchClient();
+  await initDiscordBot();
+
+  createClipStatus = new CreateClipStatus();
+  // JSON.stringify(Config, null , "\t")
+});
+// ==========================================================================
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
@@ -25,11 +65,9 @@ app.on('window-all-closed', function () {
   }
 });
 
-app.on('ready', async function () {
-  await initMainWindow();
-  initIpcEvents();
-  await initDiscordBot();
-});
+async function initTwitchClient() {
+  twitchClient = await Twitch.withCredentials(TWITCH_CLIENT_ID, TWITCH_ACCESS_TOKEN);
+}
 
 async function initMainWindow() {
   window = new BrowserWindow({
@@ -91,11 +129,29 @@ function initIpcEvents() {
   });
 }
 
-function logNewLineHook(line) {
+async function logNewLineHook(line) {
   window.webContents.send('logNewLine', line);
-  if (_.isEmpty(line) || !line.match(triggerRegexp)) return;
+  if (!createClipStatus.isReady() || _.isEmpty(line) || !line.match(triggerRegexp)) return;
 
+  createClipStatus.updateIsCreateClipReady(false);
+  setTimeout(() => {
+    createClipStatus.updateIsCreateClipReady(true);
+  }, clipCoolTime);
 
+  var clipURL = await createClip();
+  var nowTimeStr = new Moment().format('YYYY年MM月DD日 HH:MM:SS');
+  targetChannel.send(nowTimeStr + '\n' + clipURL);
+
+  // targetChannel.send('LINE1' + '\n' + 'LINE2');
+  // console.log("CLIP PROCESS FINISHED!");
+}
+
+async function createClip() {
+  // NOTE: clip duration is fixed to 30sec by API
+  var clipId = await twitchClient.helix.clips.createClip({ channelId: TWITCH_DYUKUSI_CHANNEL_ID });
+  var clipURL = 'https://clips.twitch.tv/' + clipId;
+
+  return clipURL;
 }
 
 async function openSelectCombatLogDialog() {
@@ -126,7 +182,5 @@ async function initDiscordBot() {
     // targetChannel.send("test message!");
   });
 
-  await discord.login(TOKEN);
+  await discord.login(DISCORD_BOT_TOKEN);
 }
-
-

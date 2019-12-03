@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link href="../css/common.css" rel="stylesheet">
+
+<html>
+<head>
+    <script>
+      window.nodeRequire = require;
+      delete window.require;
+      delete window.exports;
+      delete window.module;
+    </script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous">
+    </script>
+
+    <meta charset="UTF-8">
+    <title>Clipper FFXIV</title>
+</head>
+<body>
+
+<div class="container-fluid pt-3">
+    <div class="row">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>log file</span>
+        </div>
+        <div class="col-9">
+            <button id="input-select-log-file" type="button" class="btn btn-primary my-btn text-align-left">
+                click here to choose log file!
+            </button>
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>discord channel id</span>
+        </div>
+        <div class="col-9">
+            <input type="tel" id="input-discrod-channel-id" class="form-control full-size" value="">
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            trigger regexp
+        </div>
+        <div class="col-9">
+            <input type="text" id="input-trigger-regexp" class="form-control full-size" value="^03\|.*タイタン\|">
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            clip cool time(msec)
+        </div>
+        <div class="col-9">
+            <input type="text" id="input-clip-cool-time" class="form-control full-size" value="30000">
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>latest log line</span>
+        </div>
+        <div class="col-9">
+            <span id="latest-log-line">choose log file and do something in game</span>
+        </div>
+    </div>
+
+</div>
+
+</body>
+
+<script src="../render_script/compressed/index.min.js"></script>
+</html>

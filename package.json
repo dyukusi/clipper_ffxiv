@@ -1,0 +1,31 @@
+{
+  "name": "clipper_ffxiv",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^4.4.1",
+    "discord.js": "^11.5.1",
+    "electron": "^7.1.2",
+    "grunt": "^1.0.4",
+    "grunt-browserify": "^5.3.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.16.0",
+    "request": "^2.88.0",
+    "tail": "^2.0.3",
+    "twitch": "^3.5.6",
+    "twitch-pubsub-client": "^3.5.9",
+    "twitch-webhooks": "^3.5.6",
+    "underscore": "^1.9.1"
+  },
+  "devDependencies": {
+    "electron-load-devtool": "^1.2.0"
+  }
+}

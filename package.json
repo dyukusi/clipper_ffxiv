@@ -21,8 +21,10 @@
     "moment": "^2.24.0",
     "popper.js": "^1.16.0",
     "request": "^2.88.0",
+    "sprintf-js": "^1.1.2",
     "tail": "^2.0.3",
     "twitch": "^3.5.6",
+    "twitch-electron-auth-provider": "^3.5.6",
     "twitch-pubsub-client": "^3.5.9",
     "twitch-webhooks": "^3.5.6",
     "underscore": "^1.9.1"

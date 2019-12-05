@@ -8,6 +8,9 @@ const ipcMain = require('electron').ipcMain;
 const Tail = require('tail').Tail;
 const Moment = require('moment');
 const Config = require('config');
+const request = require('request');
+const sprintf = require('sprintf-js').sprintf;
+const fs = require('fs');
 let tail;
 
 let triggerRegexp = new RegExp('$^');
@@ -37,36 +40,81 @@ let window = null;
 let discordChannelId = null; // my private channel
 let Discord = require('discord.js');
 let discord = new Discord.Client();
-let DISCORD_BOT_TOKEN = Config.get('discordBotToken');
+let DISCORD_BOT_TOKEN = "NTA5NjkyMDA5ODgwMjIzNzQ1.XejmDg.bjpBgTcn1kHOGQfn4LanD5IbTiM";
 let targetChannel = null;
 
-// twitch api
+// twitch
 const Twitch = require('twitch').default;
-const TWITCH_CLIENT_ID = Config.get('twitchAPI.clientId');
-const TWITCH_ACCESS_TOKEN = Config.get('twitchAPI.accessToken');
-const TWITCH_DYUKUSI_CHANNEL_ID = Number(Config.get('twitchAPI.channelId'));
+const TwitchElectronAuthProvider = require('twitch-electron-auth-provider').default;
+const TWITCH_CLIENT_ID = "2ngcw7ps7ua3bvk5698qgubp29qvlz";
+let channelId = null;
+// const TWITCH_DYUKUSI_CHANNEL_ID = Number(Config.get('twitchAPI.channelId'));
+
 let twitchClient = null;
 
 // =========================== MAIN FUNCTION ================================
 app.on('ready', async function () {
   await initMainWindow();
+  initConfig();
   initIpcEvents();
   await initTwitchClient();
   await initDiscordBot();
 
   createClipStatus = new CreateClipStatus();
-  // JSON.stringify(Config, null , "\t")
 });
 // ==========================================================================
 
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') {
+  var latestConfigJson = JSON.stringify({
+    discordChannelId: discordChannelId,
+    triggerRegexp: triggerRegexp.toString().slice(1, triggerRegexp.toString().length - 1),
+    clipCoolTime: clipCoolTime,
+  }, null , "\t");
+
+  fs.writeFile('config/default.json', latestConfigJson, function (e, data) {
+    if (e) console.log(e);
+
     app.quit();
-  }
+  });
 });
 
+function initConfig() {
+  window.webContents.send('initConfigSettings', {
+    discordChannelId: Config.has('discordChannelId') ? Config.get('discordChannelId') : null,
+    triggerRegexp: Config.has('triggerRegexp') ? Config.get('triggerRegexp') : null,
+    clipCoolTime: Config.has('clipCoolTime') ? Config.get('clipCoolTime') : null,
+  });
+}
+
 async function initTwitchClient() {
-  twitchClient = await Twitch.withCredentials(TWITCH_CLIENT_ID, TWITCH_ACCESS_TOKEN);
+  // twitchClient = await Twitch.withCredentials(TWITCH_CLIENT_ID, TWITCH_ACCESS_TOKEN);
+  twitchClient = new Twitch({
+    authProvider: new TwitchElectronAuthProvider({
+      clientId: TWITCH_CLIENT_ID,
+      redirectURI: 'https://api.twitch.tv/helix/',
+    }),
+    initialScopes: ['clips:edit'],
+    // preAuth: true,
+  });
+
+  var me = await twitchClient.helix.users.getMe();
+  channelId = me.id;
+
+  window.webContents.send('updateTwitchAccountStatusText', sprintf(
+    'id: %s, name: %s(%s)',
+    me.id, me._data.display_name, me._data.login
+  ));
+
+  // revoke access token
+  // var result = await twitchClient.getAccessToken(['clips:edit']);
+  // var response = await doRequest({
+  //   method: 'POST',
+  //   url: 'https://id.twitch.tv/oauth2/revoke',
+  //   qs: {
+  //     client_id: TWITCH_CLIENT_ID,
+  //     token: result._data.access_token,
+  //   },
+  // });
 }
 
 async function initMainWindow() {
@@ -82,7 +130,7 @@ async function initMainWindow() {
 
   await window.loadURL('file://' + __dirname + '/view/index.html');
 
-  loadDevtool(loadDevtool.REDUX_DEVTOOLS);
+  // loadDevtool(loadDevtool.REDUX_DEVTOOLS);
   window.openDevTools();
 }
 
@@ -107,7 +155,7 @@ function initIpcEvents() {
 
   ipcMain.on('updateSettings', async function (event, settings) {
     triggerRegexp = settings.regexp ? new RegExp(settings.regexp) : new RegExp('$^'); // Trigger RegExp
-    clipCoolTime = settings.clipCoolTime || 30000; // Create clip cool time
+    clipCoolTime = Math.max(settings.clipCoolTime, 10000) || 10000; // Create clip cool time
 
     if (settings.discordChannelId && discordChannelId != Number(settings.discordChannelId)) {
       discordChannelId = settings.discordChannelId;
@@ -120,11 +168,14 @@ function initIpcEvents() {
         }
       });
 
+      var text = null;
       if (_.isEmpty(targetChannel)) {
-        console.log("discord channel not found. channel id: " + discordChannelId);
+        text = "<i class=\"fas fa-exclamation-circle\"></i> discord channel not found. channel id: " + discordChannelId;
       } else {
-        console.log("discord channel detected! server name: " + targetChannel.guild.name + " channel name: " + targetChannel.name);
+        text = "server name: " + targetChannel.guild.name + " channel name: " + targetChannel.name;
       }
+
+      window.webContents.send('updateDiscordChannelStatusText', text);
     }
   });
 }
@@ -148,7 +199,7 @@ async function logNewLineHook(line) {
 
 async function createClip() {
   // NOTE: clip duration is fixed to 30sec by API
-  var clipId = await twitchClient.helix.clips.createClip({ channelId: TWITCH_DYUKUSI_CHANNEL_ID });
+  var clipId = await twitchClient.helix.clips.createClip({ channelId: channelId });
   var clipURL = 'https://clips.twitch.tv/' + clipId;
 
   return clipURL;
@@ -183,4 +234,18 @@ async function initDiscordBot() {
   });
 
   await discord.login(DISCORD_BOT_TOKEN);
+}
+
+function doRequest(option) {
+  return new Promise((resolve, reject) => {
+    request(option, (error, response, body) => {
+      if (error) {
+        console.log("ERROR");
+        console.log(error);
+        return reject(error);
+      }
+
+      return resolve(body);
+    });
+  });
 }

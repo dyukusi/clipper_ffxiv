@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
       integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+      integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 <link href="../css/common.css" rel="stylesheet">
 
 <html>
@@ -17,18 +19,19 @@
     </script>
 
     <meta charset="UTF-8">
-    <title>Clipper FFXIV</title>
+    <title>FFXIV Auto Clipper</title>
 </head>
 <body>
 
 <div class="container-fluid pt-3">
-    <div class="row">
+    <h1>Settings</h1>
+    <div class="row pt-2">
         <div class="col-3 vertical-center-text horizontal-center-text">
             <span>log file</span>
         </div>
         <div class="col-9">
             <button id="input-select-log-file" type="button" class="btn btn-primary my-btn text-align-left">
-                click here to choose log file!
+                click here to choose log file
             </button>
         </div>
     </div>
@@ -60,12 +63,32 @@
         </div>
     </div>
 
+    <h1 class="pt-4">Status</h1>
+    <div class="row">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>twitch account</span>
+        </div>
+        <div class="col-9 vertical-center-text">
+            <span id="twitch-account-status-text"><i class="fas fa-exclamation-circle"></i> allow this app to connect your twitch account</span>
+        </div>
+    </div>
+
+
     <div class="row pt-2">
         <div class="col-3 vertical-center-text horizontal-center-text">
-            <span>latest log line</span>
+            <span>latest log</span>
         </div>
-        <div class="col-9">
-            <span id="latest-log-line">choose log file and do something in game</span>
+        <div class="col-9 vertical-center-text">
+            <span id="latest-log-line"><i class="fas fa-exclamation-circle"></i> choose latest log file and do something in game</span>
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>discord</span>
+        </div>
+        <div class="col-9 vertical-center-text">
+            <span id="target-discord-channel-text"><i class="fas fa-exclamation-circle"></i> enter your discord channel id</span>
         </div>
     </div>
 
@@ -74,10 +97,18 @@
             <span>create clip is </span>
         </div>
         <div class="col-9">
-            <span id="is-create-clip-ready-text">???</span>
+            <span id="is-create-clip-ready-text"><i class="fas fa-exclamation-circle"></i> ???</span>
         </div>
     </div>
 
+    <h1 class="pt-4">Test</h1>
+    <div class="row">
+        <div class="col-12">
+            <button id="input-start-twitch-auth" type="button" class="btn btn-twitch my-btn text-align-left">
+                click me after turn on your stream<br>(create clip & send message to your discord channel test)
+            </button>
+        </div>
+    </div>
 
 </div>
 

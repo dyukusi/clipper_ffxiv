@@ -1,9 +1,5 @@
 {
-  "discordBotToken": "NTA5NjkyMDA5ODgwMjIzNzQ1.XeZBTg.XhiHUTEW7apJR_HgemkpKz8LuNc",
-  "twitchAPI": {
-    "clientId": "2ngcw7ps7ua3bvk5698qgubp29qvlz",
-    "accessToken": "lshmitpt8y24hc3vyix60m4knqlhb6",
-    "channelId": 92659425
-  },
-  "clipCoolTime": 30000
+	"discordChannelId": "446993566997282818",
+	"triggerRegexp": "^03\\|.*リビングリキッド\\|.*\\|12889320\\|",
+	"clipCoolTime": 30000
 }

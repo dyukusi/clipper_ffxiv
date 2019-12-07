@@ -42,3 +42,8 @@ h1 {
 .fa-exclamation-circle {
     color: red;
 }
+
+.created-by {
+    padding-top: 1rem;
+    text-align: right;
+}

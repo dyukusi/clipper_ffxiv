@@ -1,6 +1,6 @@
 const electron = require('electron');
 const _ = require('underscore');
-const loadDevtool = require('electron-load-devtool');
+// const loadDevtool = require('electron-load-devtool');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const dialog = require('electron').dialog;
@@ -14,6 +14,7 @@ const fs = require('fs');
 let tail;
 
 let triggerRegexp = new RegExp('$^');
+
 class CreateClipStatus {
   constructor() {
     this.ready = true;
@@ -32,6 +33,7 @@ class CreateClipStatus {
     });
   }
 }
+
 let createClipStatus = null;
 let clipCoolTime = Number(Config.get('clipCoolTime'));
 let window = null;
@@ -40,8 +42,9 @@ let window = null;
 let discordChannelId = null; // my private channel
 let Discord = require('discord.js');
 let discord = new Discord.Client();
-let DISCORD_BOT_TOKEN = "NTA5NjkyMDA5ODgwMjIzNzQ1.XejmDg.bjpBgTcn1kHOGQfn4LanD5IbTiM";
+let DISCORD_BOT_TOKEN = "NTA5NjkyMDA5ODgwMjIzNzQ1.Xeqwog.cFcuQD2V5dRBrdmBg_yQXmJHJXA";
 let targetChannel = null;
+let isChannelFound = false;
 
 // twitch
 const Twitch = require('twitch').default;
@@ -69,11 +72,10 @@ app.on('window-all-closed', function () {
     discordChannelId: discordChannelId,
     triggerRegexp: triggerRegexp.toString().slice(1, triggerRegexp.toString().length - 1),
     clipCoolTime: clipCoolTime,
-  }, null , "\t");
+  }, null, "\t");
 
   fs.writeFile('config/default.json', latestConfigJson, function (e, data) {
     if (e) console.log(e);
-
     app.quit();
   });
 });
@@ -119,7 +121,7 @@ async function initTwitchClient() {
 
 async function initMainWindow() {
   window = new BrowserWindow({
-    width: 800, height: 600, webPreferences: {
+    width: 700, height: 700, webPreferences: {
       nodeIntegration: true,
     }
   });
@@ -154,12 +156,13 @@ function initIpcEvents() {
   });
 
   ipcMain.on('updateSettings', async function (event, settings) {
-    triggerRegexp = settings.regexp ? new RegExp(settings.regexp) : new RegExp('$^'); // Trigger RegExp
-    clipCoolTime = Math.max(settings.clipCoolTime, 10000) || 10000; // Create clip cool time
+    triggerRegexp = settings.regexp ? new RegExp(settings.regexp) : new RegExp('$^');
+    clipCoolTime = Math.max(settings.clipCoolTime, 5000) || 5000;
 
-    if (settings.discordChannelId && discordChannelId != Number(settings.discordChannelId)) {
+    if (settings.discordChannelId && discordChannelId != Number(settings.discordChannelId) || !isChannelFound) {
       discordChannelId = settings.discordChannelId;
       targetChannel = null;
+      isChannelFound = false;
 
       discord.channels.forEach(function (res) {
         // console.log(res.id + " " + res.type + " " + res.name);
@@ -171,12 +174,18 @@ function initIpcEvents() {
       var text = null;
       if (_.isEmpty(targetChannel)) {
         text = "<i class=\"fas fa-exclamation-circle\"></i> discord channel not found. channel id: " + discordChannelId;
+        isChannelFound = false;
       } else {
         text = "server name: " + targetChannel.guild.name + " channel name: " + targetChannel.name;
+        isChannelFound = true;
       }
 
       window.webContents.send('updateDiscordChannelStatusText', text);
     }
+  });
+
+  ipcMain.on('startTest', async function (event, settings) {
+    await triggeredProcess(true);
   });
 }
 
@@ -189,17 +198,54 @@ async function logNewLineHook(line) {
     createClipStatus.updateIsCreateClipReady(true);
   }, clipCoolTime);
 
-  var clipURL = await createClip();
-  var nowTimeStr = new Moment().format('YYYY年MM月DD日 HH:MM:SS');
-  targetChannel.send(nowTimeStr + '\n' + clipURL);
+  await triggeredProcess();
+}
 
-  // targetChannel.send('LINE1' + '\n' + 'LINE2');
-  // console.log("CLIP PROCESS FINISHED!");
+async function triggeredProcess(isTest) {
+  var message = '';
+  var triggeredAtMoment = new Moment().locale('ja');
+
+  // clip
+  try {
+    var clipURL = await createClip();
+    message += triggeredAtMoment.format('LLLL') + '\n' + 'Clip: ' + clipURL;
+  } catch (e) {
+    message += e;
+  }
+
+  // video
+  try {
+    var videos = await twitchClient.helix.videos.getVideosByUser(channelId);
+    var liveVideo = videos.data[0];
+    var videoBaseURL = liveVideo.url;
+    var stream = await twitchClient.helix.streams.getStreamByUserId(channelId);
+    var streamStartedAtMoment = new Moment(stream._data.started_at);
+    var liveDurationMsec = triggeredAtMoment.diff(streamStartedAtMoment); // msec diff
+    var targetPointMsec = liveDurationMsec - (35 * 1000); // 35secs before
+    var dur = Moment.duration(targetPointMsec);
+    var targetPointStr = sprintf(
+      '%sh%sm%ss',
+      dur.hours(), dur.minutes(), dur.seconds()
+    );
+    var videoURL = videoBaseURL + '?t=' + targetPointStr;
+
+    if (clipURL.indexOf('Error') != -1) {
+      message += '\n' + 'Video: ' + videoURL;
+    }
+  } catch (e) {
+    message += '\n\n' + e;
+  }
+
+  if (isTest) {
+    message = '======== THIS IS TEST ========\n' + message + '\n' + '==============================';
+  }
+
+  targetChannel.send(message);
 }
 
 async function createClip() {
   // NOTE: clip duration is fixed to 30sec by API
-  var clipId = await twitchClient.helix.clips.createClip({ channelId: channelId });
+  var clipId = await twitchClient.helix.clips.createClip({channelId: channelId});
   var clipURL = 'https://clips.twitch.tv/' + clipId;
 
   return clipURL;
@@ -221,16 +267,13 @@ async function openSelectCombatLogDialog() {
 
 async function initDiscordBot() {
   discord.on('ready', function () {
-    console.log('ready...');
+    console.log('discord bot is ready!');
 
     discord.channels.forEach(function (res) {
-      // console.log(res.id + " " + res.type + " " + res.name);
       if (res.id == discordChannelId) {
         targetChannel = res;
       }
     });
-
-    // targetChannel.send("test message!");
   });
 
   await discord.login(DISCORD_BOT_TOKEN);

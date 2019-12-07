@@ -3,13 +3,47 @@ const electron = nodeRequire('electron');
 const ipcRenderer = electron.ipcRenderer;
 require('bootstrap');
 
+const DISCORD_BOT_INVITE_URL = 'https://discordapp.com/api/oauth2/authorize?client_id=509692009880223745&permissions=7168&scope=bot';
 var isSettingInitializedByConfig = false;
 
 $(async () => {
   initSelectLogButton();
+  initInviteDiscordBotButton();
   initIpcEvent();
   initUpdateSettingPoll();
+  initTestButton();
+  initCreatedByLink();
 });
+
+function initCreatedByLink() {
+  $('#created-by-text').on('click', function (event) {
+    var button = $(this);
+    event.preventDefault();
+    electron.shell.openExternal('https://twitter.com/yukapero_com');
+  });
+}
+
+
+function initInviteDiscordBotButton() {
+  $('#invite-discord-bot').on('click', function (event) {
+    var button = $(this);
+    event.preventDefault();
+    electron.shell.openExternal(DISCORD_BOT_INVITE_URL);
+  });
+}
+
+function initTestButton() {
+  $('#create-clip-and-discord-bot-test').on('click', function (event) {
+    var button = $(this);
+
+    button.prop('disabled', true);
+    setTimeout(() => {
+      button.prop('disabled', false);
+    }, 3000);
+
+    ipcRenderer.send('startTest', true);
+  });
+}
 
 function initSelectLogButton() {
   $('#input-select-log-file').on('click', function () {
@@ -56,8 +90,6 @@ function initIpcEvent() {
   ipcRenderer.on('updateTwitchAccountStatusText', (event, text) => {
     $('#twitch-account-status-text').html(text);
   });
-
-
 };
 
 function initUpdateSettingPoll() {

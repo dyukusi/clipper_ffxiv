@@ -23,7 +23,7 @@
 </head>
 <body>
 
-<div class="container-fluid pt-3">
+<div class="container-fluid pt-3 pb-3">
     <h1>Settings</h1>
     <div class="row pt-2">
         <div class="col-3 vertical-center-text horizontal-center-text">
@@ -32,6 +32,17 @@
         <div class="col-9">
             <button id="input-select-log-file" type="button" class="btn btn-primary my-btn text-align-left">
                 click here to choose log file
+            </button>
+        </div>
+    </div>
+
+    <div class="row pt-2">
+        <div class="col-3 vertical-center-text horizontal-center-text">
+            <span>discord bot</span>
+        </div>
+        <div class="col-9">
+            <button id="invite-discord-bot" type="button" class="btn btn-primary my-btn text-align-left">
+                click here to invite discord bot into your server
             </button>
         </div>
     </div>
@@ -79,7 +90,7 @@
             <span>latest log</span>
         </div>
         <div class="col-9 vertical-center-text">
-            <span id="latest-log-line"><i class="fas fa-exclamation-circle"></i> choose latest log file and do something in game</span>
+            <span id="latest-log-line"><i class="fas fa-exclamation-circle"></i> choose latest log file then do something in game</span>
         </div>
     </div>
 
@@ -104,12 +115,15 @@
     <h1 class="pt-4">Test</h1>
     <div class="row">
         <div class="col-12">
-            <button id="input-start-twitch-auth" type="button" class="btn btn-twitch my-btn text-align-left">
+            <button id="create-clip-and-discord-bot-test" type="button" class="btn btn-twitch my-btn text-align-left">
                 click me after turn on your stream<br>(create clip & send message to your discord channel test)
             </button>
         </div>
     </div>
 
+    <div class="created-by">
+        Created by <a id="created-by-text" href="">@Yukapero</a>
+    </div>
 </div>
 
 </body>

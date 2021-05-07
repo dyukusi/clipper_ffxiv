@@ -27,7 +27,7 @@
     "twitch-electron-auth-provider": "^3.5.6",
     "twitch-pubsub-client": "^3.5.9",
     "twitch-webhooks": "^3.5.6",
-    "underscore": "^1.9.1"
+    "underscore": "^1.12.1"
   },
   "devDependencies": {
     "electron-load-devtool": "^1.2.0"

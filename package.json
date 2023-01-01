@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^4.4.1",
-    "config": "^3.2.4",
+    "config": "^3.3.8",
     "discord.js": "^11.5.1",
     "electron": "^7.1.2",
     "grunt": "^1.0.4",
